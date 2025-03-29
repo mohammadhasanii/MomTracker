@@ -1,4 +1,5 @@
 # MomTracker
+![Map View](./demo/mom-tracker.png)
 
 ## About the Project
 
