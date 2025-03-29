@@ -88,7 +88,7 @@ const MapComponent = () => {
         >
           <h1 style={{backgroundColor:"green",color:"white", padding:"10",borderRadius:"7px"}}>
             <img width={40} src="https://cdn.iconscout.com/icon/premium/png-512-thumb/crazy-man-1650831-1401821.png?f=webp&w=256" alt="Icon" />
-            محمد درحال ویلانی در این منطقه
+            محمد درحال پرسه زدن در این منطقه
             <br />
             <br/>
             فاصله: {distance} کیلومتر تا خونه
