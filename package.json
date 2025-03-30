@@ -1,11 +1,13 @@
 {
-  "name": "react",
-  "version": "0.0.0",
+  "name": "mom-tracker",
+  "description": "A simple web application to track your mom's location",
+  "author": "Mohammad Hasani",
+  "version": "1.0.0",
   "private": true,
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.17.1",
-    "mapir-react-component": "^1.8.1",
+    "mapir-react-component": "^1.8.1", 
     "react": "17.0.0",
     "react-dom": "17.0.0",
     "react-router-dom": "^6.11.0"
