@@ -1,22 +1,24 @@
 # MomTracker
-![Map View](./demo/mom-tracker.png)
+
+![Map View](./demo/demo-1.png)
 
 ## About the Project
 
 Every night, my mom asks me:  
 "Where are you going?"  
-"Why are you coming back so late?"  
+"Why are you coming back so late?"
 
 To make things easier for both of us, I created **MomTracker**. This project allows me to share my location in real-time, calculate how far I am from home, and display it on a map. Now, instead of asking me, she can just check the app and see where I am.
 
-
 ## Features
 
-- **Real-Time Location Tracking**: Fetches and displays the latest location every 5 seconds.
+- **Real-Time Location Tracking**: Real-time communication\*\* via Socket.IO (no polling)
 - **Distance Calculation**: Calculates the distance between my current location and home and displays it in a popup on the map.
-- **Location History**: Stores all location data in a JSON file for future reference.
-- **Interactive Map**: Uses `mapir-react-component` for a smooth and interactive map experience.
-- **Server Integration**: A simple Express.js server handles saving and retrieving location data.
+
+- **Interactive Map**: Uses `leaflet` for a smooth and interactive map experience.
+- **Auto-reconnection** for stable WebSocket connections
+- **Lightweight architecture** (removed legacy REST endpoints)
+- **One-command deployment** with Docker Compose
 
 ## Why MomTracker?
 
@@ -25,41 +27,43 @@ This project is a fun and practical way to keep my mom updated about my whereabo
 ## How It Works
 
 1. **Frontend**:
+
    - Built with React.
    - Displays the map and a popup with my name and the distance to home.
-   - Fetches the latest location from the server every 5 seconds.
+   - RealTime tracking with a lightweight connection
 
 2. **Backend**:
+
    - Built with Express.js.
-   - Saves location data to a JSON file (`locations.json`).
-   - Provides APIs to save and retrieve location data.
+   - Connection With Socket.IO
+   - Very lightweight
 
 3. **Distance Calculation**:
    - Uses the Haversine formula to calculate the distance between my current location and home.
 
-## Why Not Socket.IO?
-
-Although `socket.io` is a great tool for real-time communication, I decided not to use it in this project for personal reasons. I wanted to keep things simple and focus on periodic updates using REST APIs. Plus, I just didn't feel like using `socket.io` this time—sometimes, you just want to do things differently!
-
-## How to Run
+## Manual Run
 
 1. Clone the repository:
+
    ```bash
-   git clone https://github.com/your-repo/momtracker.git
+   git clone https://github.com/mohammadhasanii/MomTracker.git
    cd momtracker
    ```
 
 2. Install dependencies:
+
    ```bash
    npm install
    ```
 
 3. Start the server:
+
    ```bash
    npm run server
    ```
 
 4. Start the React app:
+
    ```bash
    npm start
    ```
@@ -71,20 +75,42 @@ Although `socket.io` is a great tool for real-time communication, I decided not 
 
 ## Tech Stack
 
-- **Frontend**: React, `mapir-react-component`
-- **Backend**: Express.js
-- **Data Storage**: JSON file (`locations.json`)
+- **Frontend**: `React`, `leaflet` `Socket.IO`
+- **Backend**: `Express.js` `Socket.IO`
+- **Data Storage**: Memory
+
+## Docker Compose Deployment
+
+```bash
+docker-compose up --build
+```
+
+## Docker Configuration Highlights
+
+```yaml
+services:
+  react-app:
+    ports: ["3000:3000"] # Access at http://localhost:3000
+    volumes: ["./:/app"] # Live code reload
+
+  node-app:
+    ports: ["5000:5000"] # Backend and Socket.IO endpoint
+    depends_on: react-app # Optional startup ordering
+
+networks:
+  mynetwork: # Isolated network for inter-container communication
+```
 
 ## Screenshots
 
 ### Demo and Popup with Distance feature
+
 ![Map View](./demo/demo-1.png)
 
 ## Future Plans
 
 - Add a feature to notify my mom when I reach home.
 - Improve the UI with more animations and better styling.
-- Add a mobile app version for easier tracking.
 
 ---
 
