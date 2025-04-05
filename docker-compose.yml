@@ -1,0 +1,31 @@
+version: '3'
+services:
+  react-app:
+    image: node:16
+    container_name: react-app
+    working_dir: /app
+    volumes:
+      - ./:/app  
+    command: >
+      sh -c "npm install --force --legacy-peer-deps && npm run start"
+    ports:
+      - "3000:3000"
+    networks:
+      - mynetwork
+
+  node-app:
+    image: node:16
+    container_name: node-app
+    working_dir: /app
+    volumes:
+      - ./:/app   
+    command: >
+      sh -c "npm install --force --legacy-peer-deps && npm run server"
+    ports:
+      - "5000:5000"
+    networks:
+      - mynetwork
+
+networks:
+  mynetwork:
+    driver: bridge

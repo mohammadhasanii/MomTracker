@@ -1,61 +1,69 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import "./style.css";
-import Mapir from "mapir-react-component";
-import { LocationProvider } from "./contexts/LocationContext";
-import SendLocation from "./components/SendLocation";
-import axios from "axios";
+import { MapContainer, TileLayer, Marker, Popup, Circle } from "react-leaflet";
 
-const TOKEN =
-  "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6ImY3MjY3ZGVlNGFiZGJmNjMxMjIyMDMyMDAyYTg5Yzc4MWNmNzg1MGVhMzBiODMyODU0MDAzMjBkY2Y1NGQ0MDNmYmYxZmIxYjYyM2VjZDIzIn0.eyJhdWQiOiIyMTgzNSIsImp0aSI6ImY3MjY3ZGVlNGFiZGJmNjMxMjIyMDMyMDAyYTg5Yzc4MWNmNzg1MGVhMzBiODMyODU0MDAzMjBkY2Y1NGQ0MDNmYmYxZmIxYjYyM2VjZDIzIiwiaWF0IjoxNjgxNDAyMDM0LCJuYmYiOjE2ODE0MDIwMzQsImV4cCI6MTY4Mzk5NDAzNCwic3ViIjoiIiwic2NvcGVzIjpbImJhc2ljIl19.T3z69Z8baWjx3zR8jsK-iQCS8A0CBE2hFgx_FDZ2yY77cVEJoo9SqYm3e3IO0WzvUT2glWstWlOhvd_wN6l3Q_f3NyoeUxthLV308ad8huxFVBkYGnxYHk1vwQS6j01D8T8U_9oaLpK2EBOnqPcXBmPTax0nT2DG9oY9b3wqNIAy4EwxcudF3kUdhbUj0x8R2vD_Hsw_wAVZR_YHvX1yfMLdnnR09ipE4UPyYkdEVQ9zRiwle2515WI3LHtvpEJAqMRUJS8NGEBwcFeZUsFHtx-uNdDDar_MCVWSvPDRSYEJV4BnfAcuFw0spuA2SCj65-q7Z814LQSIY6c32TpkAA";
+import io from "socket.io-client"; // Import socket.io-client
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 
-const Map = Mapir.setToken({
-  transformRequest: (url) => {
-    return {
-      url: url,
-      headers: {
-        "x-api-key": TOKEN,
-        "Mapir-SDK": "reactjs",
-      },
-    };
-  },
+// Fix for default marker icon
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: require("leaflet/dist/images/marker-icon-2x.png"),
+  iconUrl: require("leaflet/dist/images/marker-icon.png"),
+  shadowUrl: require("leaflet/dist/images/marker-shadow.png"),
 });
 
+const socket = io("http://localhost:5000"); //SOCKET SERVER URL
+
 const MapComponent = () => {
-  const [displayLocation, setDisplayLocation] = useState([51.42047, 35.729054]);
-  const targetLocation = [49.740646, 34.097525];
+  const [displayLocation, setDisplayLocation] = useState([
+    34.097525, 49.740646,
+  ]);
   const [distance, setDistance] = useState(0);
+  const mapRef = useRef(null);
 
   useEffect(() => {
-    const fetchLatestLocation = async () => {
-      try {
-        const response = await axios.get(
-          "https://8nvkd5q1-3001.euw.devtunnels.ms/api/getLatestLocation"
-        );
-        const data = response.data;
+    socket.on("newLocation", (location) => {
+      const lat = parseFloat(location.x);
+      const lng = parseFloat(location.y);
+      if (!isNaN(lat) && !isNaN(lng)) {
+        const newLocation = [lat, lng];
+        console.log("New location:", newLocation);
+        setDisplayLocation(newLocation);
 
-        if (data.success && data.location) {
-          setDisplayLocation([data.location.x, data.location.y]);
+        if (mapRef.current) {
+          mapRef.current.setView(newLocation, mapRef.current.getZoom());
         }
-      } catch (error) {
-        console.error("Error fetching latest location:", error);
       }
+    });
+
+    socket.emit("getLatestLocation");
+
+    socket.on("latestLocation", (data) => {
+      const latestLocation = data.location;
+      if (latestLocation) {
+        const lat = parseFloat(latestLocation.x);
+        const lng = parseFloat(latestLocation.y);
+        setDisplayLocation([lat, lng]);
+      }
+    });
+
+    return () => {
+      socket.off("newLocation");
+      socket.off("latestLocation");
     };
-
-    const interval = setInterval(fetchLatestLocation, 5000);
-    fetchLatestLocation();
-
-    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
     const calculateDistance = (loc1, loc2) => {
       const toRad = (value) => (value * Math.PI) / 180;
       const R = 6371;
-      const dLat = toRad(loc2[1] - loc1[1]);
-      const dLon = toRad(loc2[0] - loc1[0]);
-      const lat1 = toRad(loc1[1]);
-      const lat2 = toRad(loc2[1]);
+      const dLat = toRad(loc2[0] - loc1[0]);
+      const dLon = toRad(loc2[1] - loc1[1]);
+      const lat1 = toRad(loc1[0]);
+      const lat2 = toRad(loc2[0]);
 
       const a =
         Math.sin(dLat / 2) * Math.sin(dLat / 2) +
@@ -67,46 +75,46 @@ const MapComponent = () => {
       return R * c;
     };
 
-    setDistance(calculateDistance(displayLocation, targetLocation).toFixed(2));
+    const homeLocation = [34.097525, 49.740646];
+    setDistance(calculateDistance(displayLocation, homeLocation).toFixed(2));
   }, [displayLocation]);
 
   return (
     <div className="App">
-      <Mapir center={displayLocation} Map={Map} zoom={[15]} dragPan={true}>
-        <Mapir.Marker coordinates={displayLocation} anchor="center" />
-
-        <Mapir.Popup
-          coordinates={displayLocation}
-          offset={{
-            "bottom-left": [12, -38],
-            bottom: [0, -38],
-            "bottom-right": [-12, -38],
-          }}
-        >
-          <h1
-            style={{
-              backgroundColor: "green",
-              color: "white",
-              padding: "10",
-              borderRadius: "7px",
-            }}
-          >
-            <img
-              width={40}
-              src="https://cdn.iconscout.com/icon/premium/png-512-thumb/crazy-man-1650831-1401821.png?f=webp&w=256"
-              alt="Icon"
-            />
-            محمد درحال پرسه زدن در این منطقه
-            <br />
-            <br />
-            فاصله: {distance} کیلومتر تا خونه
-          </h1>
-        </Mapir.Popup>
-      </Mapir>
+      <MapContainer
+        center={displayLocation}
+        zoom={15}
+        style={{ height: "100vh", width: "100%" }}
+        ref={mapRef}
+        scrollWheelZoom={true}
+      >
+        <TileLayer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        />
+        <Marker position={displayLocation}>
+          <Popup>
+            <div style={{ direction: "rtl", textAlign: "center" }}>
+              <img
+                width={40}
+                src="https://cdn.iconscout.com/icon/premium/png-512-thumb/crazy-man-1650831-1401821.png?f=webp&w=256"
+                alt="Icon"
+              />
+              <h3 style={{fontSize:"20px"}}>محمد درحال پرسه زدن در این منطقه</h3>
+              <p style={{fontSize:"20px"}}>فاصله: {distance} کیلومتر تا خونه</p>
+            </div>
+          </Popup>
+        </Marker>
+        <Circle
+          center={displayLocation}
+          radius={100}
+          pathOptions={{ color: "blue", fillColor: "blue", fillOpacity: 0.2 }}
+        />
+      </MapContainer>
       <div className="current-location">
-        <p>The last recorded position:</p>
-        <p>Lat: {displayLocation[0]}</p>
-        <p>Long: {displayLocation[1]}</p>
+        <p>آخرین موقعیت ثبت شده:</p>
+        <p>عرض: {displayLocation[0]}</p>
+        <p>طول: {displayLocation[1]}</p>
       </div>
     </div>
   );
@@ -114,18 +122,11 @@ const MapComponent = () => {
 
 const App = () => {
   return (
-    <LocationProvider>
-      <BrowserRouter>
-        <nav>
-          <Link to="/">مشاهده نقشه</Link>
-          <Link to="/send-location">ارسال موقیت جغرافیایی</Link>
-        </nav>
-        <Routes>
-          <Route path="/" element={<MapComponent />} />
-          <Route path="/send-location" element={<SendLocation />} />
-        </Routes>
-      </BrowserRouter>
-    </LocationProvider>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<MapComponent />} />
+      </Routes>
+    </BrowserRouter>
   );
 };
 

@@ -104,3 +104,20 @@ nav a {
 .download-btn:hover {
   background-color: #45a049;
 }
+
+/*  Leaflet styles */
+.leaflet-container {
+  width: 100%;
+  height: 100vh;
+}
+
+.leaflet-popup-content {
+  direction: rtl;
+  text-align: center;
+  min-width: 200px;
+}
+
+.leaflet-popup-content img {
+  display: block;
+  margin: 0 auto;
+}
