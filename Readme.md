@@ -101,11 +101,7 @@ networks:
   mynetwork: # Isolated network for inter-container communication
 ```
 
-## Screenshots
 
-### Demo and Popup with Distance feature
-
-![Map View](./demo/demo-1.png)
 
 ## Future Plans
 
