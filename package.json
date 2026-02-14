@@ -6,7 +6,7 @@
   "private": true,
   "dependencies": {
     "cors": "^2.8.5",
-    "express": "^4.17.1",
+    "express": "^4.22.1",
     "leaflet": "^1.9.4",
     "mapir-react-component": "^2.0.7",
     "react": "17.0.0",
